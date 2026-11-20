@@ -47,6 +47,7 @@ THEN I am logged out of the site and presented with a menu with the options Sear
 - [Description](#description)
 - [Technologies](#technologies)
 - [Installation](#installation)
+- [Configuration](#configuration)
 - [Usage](#usage)
 - [Screenshots](#screenshots)
 
@@ -59,6 +60,7 @@ Therefore, to keep up with the current demands, some existing fully function app
 ## Technologies
 
 - Apollo/client/server
+- bcryptjs
 - Express.js
 - GraphQL
 - Heroku
@@ -68,44 +70,93 @@ Therefore, to keep up with the current demands, some existing fully function app
 - Node.js
 - NoSQL/ MongoDB
 - React
+- React Bootstrap
+- React Router
+- Vite
 
 ## Installation
 
-In order to be able to run the applicaton, you are required to do the following:
+1. Clone the repository and open the project root in VS Code.
+2. Install the root, server, and client dependencies:
 
-- Download the zip file/ clone the GitHub repo
-- Open the folder in VSCode
-- Click the "Toggle Panel" on the right-side or "Ctrl+J" to see the Terminal or Command Line Interface(CLI)
-- Install npm (Node Package Manager) inside the repo by typing the following code in the Command Line:
+```powershell
+npm install
+```
 
+## Configuration
+
+### Database
+
+Choose one database option.
+
+#### Option A: local MongoDB
+
+Start MongoDB on your own computer. If no `MONGODB_URI` is configured, the server connects to:
+
+```text
+mongodb://127.0.0.1:27017/booksearchDB
 ```
-    npm install               Press Enter
+
+`127.0.0.1` means the developer's own computer. This is not a shared database and requires MongoDB to be installed and running locally.
+
+#### Option B: MongoDB Atlas
+
+For a shared or deployed database, copy `server/.env.example` to `server/.env`, then replace the placeholder with your Atlas connection string:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-host>/booksearchDB?retryWrites=true&w=majority
 ```
+
+Allow your IP address in MongoDB Atlas Network Access. The server loads `server/.env` automatically. Never commit `server/.env` or an Atlas password to Git.
+
+### Google Books API
+
+Copy `client/.env.example` to `client/.env.local` for Google Books searches:
+
+```text
+client/.env.local
+```
+
+Add your Google Books API key:
+
+```env
+VITE_GOOGLE_BOOKS_API_KEY=your_google_books_api_key
+```
+
+Create the key in Google Cloud, enable the Books API, and restrict the key to the Books API and the appropriate app URLs. For local development, allow `http://localhost:3000/*`. The `.env.local` file is ignored by Git and must not be committed.
 
 ## Usage
 
-To use the application,
+Start the complete local development environment from the repository root:
 
-- You need to do, "npm install" if you haven't done in the Installation section above.
-- Type the following commands in the Command Line to run and test the GraphQL `server-side` application:
-
-```
-    npm start               Press Enter
+```powershell
+npm run develop
 ```
 
-- Type the following commands in the Command Line to run both client side and server side. Then test the application from the frontend, `client-side`:
+This command starts:
 
+- the Vite React client at `http://localhost:3000`;
+- the Express/Apollo GraphQL API at `http://localhost:3001/graphql`.
+
+Before starting, the command stops stale local processes using ports 3000 and 3001. Do not separately run `npm start`, `npm run watch`, or `npm run dev` in another terminal while `npm run develop` is running.
+
+To create a production client build, run:
+
+```powershell
+npm run build
 ```
-    npm run develop               Press Enter
-```
 
-`npm run develop` stops any stale local development process using ports 3000 or 3001 before starting the client and API server. Do not run `npm start`, `npm run watch`, or `npm run dev` in another terminal at the same time.
+After changing either environment file, stop and restart `npm run develop` so the new values are loaded.
 
-### Google Books API key
+### Application behavior
 
-Book searches require a Google Books API key. Create a key in Google Cloud, enable the Books API for that project, and restrict the key to the Books API and your app's HTTP referrers. Copy `client/.env.example` to `client/.env.local`, then replace `your_google_books_api_key` with your key. Restart `npm run develop` after adding or changing the key.
+- Enter a book title, author, or keyword before selecting **Submit Search**. The search button remains disabled until text is entered.
+- Google Books API errors, including quota or API-key errors, are displayed in the application.
+- Create an account or log in to save books, view saved books, and remove saved books.
+- Authentication uses JWTs that expire after two hours. Users with an expired session must log in again.
+- Passwords are hashed with `bcryptjs` before they are stored in MongoDB.
 
-- Then, test all the functions and features.
+Then, test all the functions and features:
 
 ```md
 - Create an account
