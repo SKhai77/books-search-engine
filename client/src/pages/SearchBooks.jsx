@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Container, Col, Form, Button, Card, Row } from "react-bootstrap";
+import { Alert, Container, Col, Form, Button, Card, Row } from "react-bootstrap";
 
 import Auth from "../utils/auth";
 import { searchGoogleBooks } from "../utils/API";
@@ -12,12 +12,14 @@ const SearchBooks = () => {
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
   const [searchInput, setSearchInput] = useState("");
+  const [searchError, setSearchError] = useState("");
 
   // create state to hold saved bookId values
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
 
   // Use the useMutation saveBook
   const [saveBook] = useMutation(SAVE_BOOK);
+  const hasSearchInput = searchInput.trim().length > 0;
 
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   useEffect(() => {
@@ -28,18 +30,22 @@ const SearchBooks = () => {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
-    if (!searchInput) {
+    if (!hasSearchInput) {
+      setSearchError("Enter a book title, author, or keyword before searching.");
       return false;
     }
 
+    setSearchError("");
+
     try {
-      const response = await searchGoogleBooks(searchInput);
+      const response = await searchGoogleBooks(searchInput.trim());
 
       if (!response.ok) {
-        throw new Error("something went wrong!");
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Unable to search for books.");
       }
 
-      const { items } = await response.json();
+      const { items = [] } = await response.json();
 
       const bookData = items.map((book) => ({
         bookId: book.id,
@@ -53,6 +59,8 @@ const SearchBooks = () => {
       setSearchInput("");
     } catch (err) {
       console.error(err);
+      setSearchedBooks([]);
+      setSearchError(err.message);
     }
   };
 
@@ -91,6 +99,7 @@ const SearchBooks = () => {
       <div className="text-light bg-dark p-5">
         <Container>
           <h1>Search for Books!</h1>
+          {searchError && <Alert variant="danger">{searchError}</Alert>}
           <Form onSubmit={handleFormSubmit}>
             <Row>
               <Col xs={12} md={8}>
@@ -100,11 +109,21 @@ const SearchBooks = () => {
                   onChange={(e) => setSearchInput(e.target.value)}
                   type="text"
                   size="lg"
-                  placeholder="Search for a book"
+                  placeholder="Enter a book title, author, or keyword"
+                  aria-describedby="search-help"
+                  required
                 />
+                <Form.Text id="search-help" className="text-light">
+                  Enter a book title, author, or keyword, then select Submit Search.
+                </Form.Text>
               </Col>
               <Col xs={12} md={4}>
-                <Button type="submit" variant="success" size="lg">
+                <Button
+                  type="submit"
+                  variant="success"
+                  size="lg"
+                  disabled={!hasSearchInput}
+                >
                   Submit Search
                 </Button>
               </Col>

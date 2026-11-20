@@ -37,9 +37,19 @@ const startApolloServer = async () => {
   }
 
   db.once("open", () => {
-    app.listen(PORT, () => {
+    const httpServer = app.listen(PORT, () => {
       console.log(`API server running on port ${PORT}!`);
       console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
+    });
+
+    httpServer.on("error", (error) => {
+      if (error.code === "EADDRINUSE") {
+        console.error(`Port ${PORT} is already in use. Stop the existing server and run npm run develop again.`);
+      } else {
+        console.error("Unable to start the API server:", error);
+      }
+
+      process.exit(1);
     });
   });
 };

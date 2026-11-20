@@ -99,6 +99,12 @@ To use the application,
     npm run develop               Press Enter
 ```
 
+`npm run develop` stops any stale local development process using ports 3000 or 3001 before starting the client and API server. Do not run `npm start`, `npm run watch`, or `npm run dev` in another terminal at the same time.
+
+### Google Books API key
+
+Book searches require a Google Books API key. Create a key in Google Cloud, enable the Books API for that project, and restrict the key to the Books API and your app's HTTP referrers. Copy `client/.env.example` to `client/.env.local`, then replace `your_google_books_api_key` with your key. Restart `npm run develop` after adding or changing the key.
+
 - Then, test all the functions and features.
 
 ```md

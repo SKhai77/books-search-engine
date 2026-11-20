@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@apollo/client";
 import { Container, Card, Button, Row, Col } from "react-bootstrap";
+import { Navigate } from "react-router-dom";
 
 import Auth from "../utils/auth";
 import { removeBookId, saveBookIds } from "../utils/localStorage";
@@ -8,13 +9,15 @@ import { GET_ME } from "../utils/queries";
 
 const SavedBooks = () => {
   // Use useQuery to execute the GET_ME query on load
-  const { loading, data } = useQuery(GET_ME);
+  const { loading, data, error } = useQuery(GET_ME);
 
   // Use useMutation to execute the REMOVE_BOOK mutation
-  const [removeBook] = useMutation(REMOVE_BOOK);
+  const [removeBook] = useMutation(REMOVE_BOOK, {
+    refetchQueries: [{ query: GET_ME }],
+  });
 
   // Destructure the user data from the query result
-  const userData = data?.me || {};
+  const userData = data?.me;
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
@@ -45,13 +48,17 @@ const SavedBooks = () => {
     return <h2>LOADING...</h2>;
   }
 
+  if (!Auth.loggedIn() || error || !userData) {
+    return <Navigate to="/" replace />;
+  }
+
   // Retrieves and saved books IDs from the usr's saved books
   const savedBookIds = userData.savedBooks.map((book) => book.bookId);
   saveBookIds(savedBookIds);
 
   return (
     <>
-      <div fluid="true" className="text-light bg-dark p-5">
+      <div className="text-light bg-dark p-5">
         <Container>
           <h1>Viewing saved books!</h1>
         </Container>
